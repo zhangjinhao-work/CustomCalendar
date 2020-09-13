@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import CustomCalendar from '@/components/CustomCalendar/Calendar.jsx'
 function App() {
