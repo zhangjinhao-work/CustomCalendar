@@ -25,8 +25,8 @@ class CustomCalendar extends React.Component {
   componentDidMount() {
 
 
-    let date = moment('2020-09-12').toDate();
-    console.log(date.getFullYear())
+    let date = moment(new Date).toDate();
+    console.log(date)
     if (date) {
       let y = date.getFullYear();
       let m = date.getMonth() + 1;
@@ -42,7 +42,7 @@ class CustomCalendar extends React.Component {
     let today = d;
     let year = y || date.getFullYear(); // 本年
     let month = m || date.getMonth() + 1; //本月
-    console.log(year)
+ 
     let date2 = new Date(year, month, 0);
     let days = date2.getDate();  // 本月共有多少天
 
@@ -79,11 +79,11 @@ class CustomCalendar extends React.Component {
       list.push(obj)
 
     }
-    console.log(list)
+
     let hlist = _.chunk(list, 7); //转化为二位数组
     let len = hlist.length;
     let to = 7 - hlist[len - 1].length;
-    console.log(hlist)
+
 
     //循环尾部补空格
     for (let i = 0; i < to; i++) {
@@ -105,15 +105,70 @@ class CustomCalendar extends React.Component {
       if (handleFun) {
         handleFun(year, month, day)
       }
-     
+
     })
+  }
 
+  backMonth = () => {  //上月
+    let prevMonth = this.state.month + -1;
+    let prevYear = this.state.year;
+    if (prevMonth < 1) {
+      prevMonth = 12;
+      prevYear -= 1;
+    }
+    this.initState({
+      y: prevYear,
+      m: prevMonth
+    }, this.handleChangeMonth)
 
+  }
+  nextMonth = () => { // 下月
+    let prevMonth = this.state.month + 1;
+    let prevYear = this.state.year;
+    if (prevMonth > 12) {
+      prevMonth = 1;
+      prevYear += 1;
+    }
+    this.initState({
+      y: prevYear,
+      m: prevMonth
+    }, this.handleChangeMonth);
+  }
+
+  /**
+   * @param year 当前年份
+   * @param month 当前月份
+   * @param day 当前日是星期几
+   * 
+   */
+  handleChangeMonth = (year, month, day) => {
+    if (this.props.onChangeMonth) {
+      this.props.onChangeMonth(year, month, day);
+    }
+  }
+
+  handleChangeDate = (date,item,ii,current) => {  //点击日期
+
+    if(current === 0){  // 点击非当月日期
+      return 
+    }
+    let hlist = this.state.hlist;
+    // 全部重置为false
+    for(let items of hlist){
+      for(let item of items){
+        item.isSelected = false
+      }
+    }
+    hlist[item][ii].date = current;
+    hlist[item][ii].isSelected = true;
+
+    this.setState({
+      hlist:[...hlist]
+    });
 
 
 
   }
-
 
   render() {
     const { year, month } = this.state;
@@ -124,11 +179,11 @@ class CustomCalendar extends React.Component {
       <>
         <div className={styles.calendarBox}>
           <div className={styles.titleName}>
-            <div className={styles.iconBtn}>
+            <div className={styles.iconBtn} onClick={() => this.backMonth()}>
               <img src={require('../../assets/icon_back.png')} alt="上一月" />
             </div>
-            <span>2020年9月20日</span>
-            <div className={styles.iconBtn}>
+            <span>{year}年{month}月</span>
+            <div className={styles.iconBtn} onClick={() => this.nextMonth()}>
               <img src={require('../../assets/icon_next.png')} alt="下一月" />
             </div>
           </div>
@@ -142,55 +197,62 @@ class CustomCalendar extends React.Component {
                 ))
               }
             </ul>
-          
-              {
-                this.state.hlist.map((el, index) => {
-                  let firstRowForZero = [];
-                  let lastRowForZero = [];
-                  if (index === 0 || index === this.state.hlist.length - 1) {
-                    let zeroCount = 0;
-                    for (let i = 0; i < el.length; i++) {
-                      if (el[i].date === 0) {  // 0说明还不是一号开头 
-                        zeroCount++;
-                        if (i > 0 && el[6].date === 0) {
-                          lastRowForZero[i] = zeroCount
-                        }
+
+            {
+              this.state.hlist.map((el, index) => {
+                let firstRowForZero = [];
+                let lastRowForZero = [];
+                if (index === 0 || index === this.state.hlist.length - 1) {
+                  let zeroCount = 0;
+                  for (let i = 0; i < el.length; i++) {
+                    if (el[i].date === 0) {  // 0说明还不是一号开头 
+                      zeroCount++;
+                      if (i > 0 && el[6].date === 0) {
+                        lastRowForZero[i] = zeroCount
                       }
                     }
-                    for (let i = 0; i < zeroCount; i++) {
-                      firstRowForZero.push(beforeMonthDays - zeroCount + 1 + i)
-                    }
-                    if (lastRowForZero.length === 0) {
-                      lastRowForZero = firstRowForZero
-                    }
-
+                  }
+                  for (let i = 0; i < zeroCount; i++) {
+                    firstRowForZero.push(beforeMonthDays - zeroCount + 1 + i)
+                  }
+                  if (lastRowForZero.length === 0) {
+                    lastRowForZero = firstRowForZero
                   }
 
-                  return (
-                    <ul className={styles.daysText} key={index}>
-                      {
-                        el.map((item, ii) => {
-                          return (
-                            <li className={item.date === 0?styles.otherdaysText : styles.daysText} key={ii}>
-                              {item.date > 0 ? item.date : (index === 0 ? firstRowForZero[ii] : lastRowForZero[ii])}
-                             {
-                              new Date() >= moment(`${year}-${month}-${item.date}`,'YYYY-MM-DD').toDate() && (item.isHave?
-                               <i className={styles.havei}></i>
-                               :
-                               <i className={styles.nothavei}></i>)
-                             }
-                            </li>
-                          )
-                        })
-                      }
+                }
+
+                return (
+                  <ul className={styles.daysText} key={index}>
+                    {
+                      el.map((item, ii) => {
+                        return (
+                          <li onClick={this.handleChangeDate.bind(this,moment(`${year}-${month}-${item.date}`,'YYYY-MM-DD').toDate(), index, ii, item.date)} className={item.date === 0 ? styles.otherdaysText : styles.daysText} key={ii}>
+
+                           <div className={item.isSelected && new Date() >= moment(`${year}-${month}-${item.date}`,'YYYY-MM-DD').toDate() ? styles.itemSelected : styles.itemNoSelected}>
+                            {item.date > 0 ? item.date : (index === 0 ? firstRowForZero[ii] : lastRowForZero[ii])}
+                            
+                            </div>
+                            {
+                              new Date() >= moment(`${year}-${month}-${item.date}`, 'YYYY-MM-DD').toDate() && (item.isHave ?
+                                <i className={styles.havei}></i>
+                                :
+                                <i className={styles.nothavei}></i>)
+                            }
+                          </li>
+                        )
+                      })
+                    }
                   </ul>
-                  )
+                )
 
-                })
+              })
 
-              }
+            }
 
-           
+
+          </div>
+          <div className={styles.bottomBox}>
+            <div></div>
           </div>
         </div>
       </>
