@@ -37,6 +37,21 @@ class CustomCalendar extends React.Component {
     }
   }
 
+  componentDidUpdate(prevProps,prevState){
+    if(prevProps.defaultDate !== this.props.defaultDate){  //翻到以前的月份 显示最后一天，这里是显示哪个月份的判断在  onChangeMonth() 中定义state的值
+      
+      let date = this.props.defaultDate;
+      if (date) {
+        let y = date.getFullYear();
+        let m = date.getMonth() + 1;
+        let d = date.getDate();
+        this.initState({ y, m, d });
+      } else {
+        this.initState({});
+      }
+    }
+  }
+
   initState = ({ y, m, d }, handleFun) => {  // 数据初始化
     let date = new Date();
     let today = d;
@@ -166,6 +181,7 @@ class CustomCalendar extends React.Component {
       hlist:[...hlist]
     });
 
+    this.props.onChangeDate(date)
 
 
   }
